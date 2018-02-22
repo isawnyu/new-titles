@@ -25,3 +25,4 @@ def pad_bsn(bsn):
 def prettify_xml(xml_string):
     return '\n'.join([line for line in minidom.parseString(xml_string).toprettyxml(indent=' '*2).split('\n') if line.strip()])
 
+
