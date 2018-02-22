@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+    {% for cat in cats %}
+    <div>
+        <h2>{{ cat }}</h2>
+
+        {% for nt in nts if nt.category == cat.lower() %}
+        <div>
+        <p class="citation">
+            <!--- {{ loop.index0 + 1 }} --->
+            <b>{% if nt.char == True %}<i>{{ nt.title }}</i>{% else %}{{ nt.title }}{% endif %}</b>{% if nt.volume %}, {{ nt.volume }}{% endif %}{% if nt.contributor %}. {{ nt.contributor }}{% endif %}.<br>
+        {% if nt.series %}{{ nt.series }}. {% endif %}{% if nt.edition %}{{ nt.edition }}. {% endif %}{% if nt.imprint %}{{ nt.imprint }}. {% endif %}{{ nt.collection}} {{ nt.callnumber }}. {% if nt.gift %}{{ nt.gift }}.{% endif %}<br>            
+            <a href="https://library.nyu.edu/persistent/lcn/nyu_aleph{{ nt.bsn }}?institution=NYU&persistent">View item in Bobcat</a>. {% if nt.handle %}<a href="{{ nt.handle }}">View item in Ancient World Digital Library</a>. {% endif %}
+        </p>
+    </div>
+    </div>
+{% endfor %}
+{% endfor %}
+{% endblock %}
+
+<!---
+Notes:
+- Format bold/italics through CSS?
+--->
+
