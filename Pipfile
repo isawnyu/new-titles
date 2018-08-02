@@ -1,12 +1,9 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
 flask = "*"
 xmltodict = "*"
 callnumber = {git = "https://github.com/diyclassics/library-callnumber-lc.git"}
@@ -15,7 +12,8 @@ numpy = "*"
 scipy = "*"
 nltk = "*"
 requests = "*"
-
+pyzotero = "*"
+requests-xml = "*"
+roman = "*"
 
 [dev-packages]
-

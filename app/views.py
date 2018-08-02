@@ -15,8 +15,47 @@ import xml.etree.ElementTree as ET
 import xmltodict
 import callnumber as callnumber
 
+import os
+from pyzotero import zotero
+
+from datetime import datetime
+from calendar import monthrange
+
+from pprint import pprint
+
+#library_id = os.getenv('LIBRARY_ID')
+#library_type = os.getenv('LIBRARY_TYPE')
+#api_key = os.getenv('API_KEY')
+
+#z = zotero.Zotero(library_id, library_type, api_key)
+
 from app.newtitles import combine_xml, pad_bsn, prettify_xml
 from app.title import NewTitle, NewTitleXML
+
+### Load/convert infile
+
+with open('app/data/in/ISAW_NEW_650_all.xml') as f:
+    doc = xmltodict.parse(f.read())
+
+### Extract date info
+
+def get_month_year(aleph_xml_dict):
+    date_sample = doc['printout']['ROW'][0]['DATE_ADDED']
+    d = datetime.strptime(date_sample, '%Y%m%d')
+    year = d.strftime('%Y')
+    month = d.strftime('%m')
+    return year, month
+
+year, month = get_month_year(doc)
+_, max_day = monthrange(int(year), int(month))
+max_day = '{:02}'.format(max_day)
+
+range_low_str = f'{year}{month}01'
+range_high_str = f'{year}{month}{max_day}'
+range_low = datetime.strptime(range_low_str, '%Y%m%d')
+range_high = datetime.strptime(range_high_str, '%Y%m%d')
+range_low_format = range_low.strftime('%B %-d, %Y')
+range_high_format = range_high.strftime('%B %-d, %Y')
 
 # Read a txt file of isbns
 # File should be named append-bsns.txt
@@ -56,7 +95,7 @@ def process():
     # Combine xml NT report with append
     # File should be named report.xml
     # Make an argument?
-    process_infile = 'app/data/in/report.xml'
+    process_infile = 'app/data/in/ISAW_NEW_650_all.xml'
     process_tmp = 'app/data/tmp/report.xml'
     copyfile(process_infile, process_tmp)
 
@@ -71,7 +110,7 @@ def process():
     with open(process_outfile) as f:
         doc = xmltodict.parse(f.read())
 
-    # Logging?    
+    # Logging?
     print('There are {} records in this month\'s report.'.format(len(doc['printout']['ROW'])))
 
     report = []
@@ -253,11 +292,18 @@ def process():
             records[i]['category'] = category
 
     records = sorted(records, key=lambda k: (k['lccn'], int(''.join(list(filter(str.isdigit, "0"+ k['volume']))))))
-    print(records[:10])
-            
+
     with open('app/data/ref/newtitles.p', 'wb') as f:
         pickle.dump(records, f)
-    
+
+
+###
+#Export to Zotero
+###
+
+#zotero_create_collection = z.create_collection('name': current_new_titles')
+#zotero_link = f"https://www.zotero.org/groups/290269/isaw_library_new_titles/items/collectionKey/{zotero_create_collection['successful']['0']['links']['self']['href']}"
+
 ###
 
 import pickle
@@ -274,13 +320,16 @@ cats = ['Classical Antiquity & Western Europe',
 
 @app.route('/')
 def index():
+
+    zotero_link = "https://www.zotero.org/groups/290269/isaw_library_new_titles/items/collectionKey/XBKJZTFB"
+
     # Break process() up into smaller functions
     process()
     return render_template("index.html",
                            title='Home',
-                           range_low = 'December 1, 2017',
-                           range_high = 'December 31, 2017',
-                           zotero='https://www.zotero.org/groups/290269/isaw_library_new_titles/items/collectionKey/PWFRN5US',
+                           range_low_format=range_low_format,
+                           range_high_format=range_high_format,
+                           zotero_link=zotero_link,
                            nts=nts,
                            cats=cats #cats=set([nt['category'].title() for nt in nts])
                           )
@@ -302,4 +351,3 @@ def xml_test():
 
 
 # Fix insertion of date range
-
