@@ -9,6 +9,7 @@ from shutil import copyfile
 
 import csv
 import pickle
+import urllib.request
 
 import xml.etree.ElementTree as ET
 
@@ -215,59 +216,76 @@ def process():
                if uchr.isalpha()) # isalpha suggested by John Machin
 
 
+    def check_bsn(bsn):
+        urlstring = 'http://aleph.library.nyu.edu/X?op=publish_avail&library=nyu01&doc_num=%s' % bsn
+        url = urllib.request.urlopen(urlstring)
+        tree = ET.parse(url)
+        root = tree.getroot()
+        check = root.findall(".//{http://www.openarchives.org/OAI/2.0/}metadata/")
+        return True if check else False
+
     records = []
     processed = 0
+    successes = 0
+
+
 
     for i, barcode in enumerate(barcodes):
         bc_index = barcodes.index(barcode)
 
         bsn = report[bc_index]['bsn']
-
-
-        new_title = NewTitle(bsn)
-        #print("Processing record %d: %s" % (i+1, bsn))
         processed += 1
-        record = {}
-        record['bsn'] = bsn
-        record['title'] = new_title.format_title()
-        record['char'] = only_roman_chars(record['title'])
-        record['contributor'] = new_title.format_contributor()
-        record['edition'] = new_title.format_edition()
 
-        if 'imprint' in report[bc_index].keys():
-            record['imprint'] = report[bc_index]['imprint'].strip()
-            record['imprint'] = record['imprint'][:-1] if record['imprint'][-1] == '.' else record['imprint']
-        else:
+
+        if check_bsn(bsn):
+            successes += 1
+
+            new_title = NewTitle(bsn) # API call already made in check--capture that information so there is no need to make second call?
+
+            #print("Processing record %d: %s" % (i+1, bsn))
+
+            record = {}
+            record['bsn'] = bsn
+            record['title'] = new_title.format_title()
+            record['char'] = only_roman_chars(record['title'])
+            record['contributor'] = new_title.format_contributor()
+            record['edition'] = new_title.format_edition()
+
+            if 'imprint' in report[bc_index].keys():
+                record['imprint'] = report[bc_index]['imprint'].strip()
+                record['imprint'] = record['imprint'][:-1] if record['imprint'][-1] == '.' else record['imprint']
+            else:
+                record['imprint'] = new_title.format_imprint()
+
             record['imprint'] = new_title.format_imprint()
+            record['collection'] = new_title.format_collection()
+            record['series'] = new_title.format_series()
 
-        record['imprint'] = new_title.format_imprint()
-        record['collection'] = new_title.format_collection()
-        record['series'] = new_title.format_series()
+            if 'volume' in report[bc_index].keys():
+                record['volume'] = report[bc_index]['volume'].replace('.', '. ')
+            else:
+                record['volume'] = ""
 
-        if 'volume' in report[bc_index].keys():
-            record['volume'] = report[bc_index]['volume'].replace('.', '. ')
-        else:
-            record['volume'] = ""
-
-        # FIX!
-        record['callnumber'] = new_title.format_callnumber()
-        if record['callnumber']:
-            record['lccn'] = callnumber.LC(record['callnumber']).normalized
-        else:
-            record['lccn'] = "Call number missing"
-
-        if record['lccn'] == None:
-            record['lccn'] = record['callnumber'].strip().title()
-
-        if record['volume']:
+            # FIX!
+            record['callnumber'] = new_title.format_callnumber()
             if record['callnumber']:
-                record['callnumber'] += " " + record['volume']
+                record['lccn'] = callnumber.LC(record['callnumber']).normalized
+            else:
+                record['lccn'] = "Call number missing"
 
-        record['gift'] = new_title.format_gift()
-        record['handle'] = new_title.format_handle()
+            if record['lccn'] == None:
+                record['lccn'] = record['callnumber'].strip().title()
 
-        records.append(record)
+            if record['volume']:
+                if record['callnumber']:
+                    record['callnumber'] += " " + record['volume']
 
+            record['gift'] = new_title.format_gift()
+            record['handle'] = new_title.format_handle()
+
+            records.append(record)
+        else:
+            print(f'{bsn} is an invalid BSN. Skipping record...')
 
     print('\nFinished processing %d records.' % processed)
 
