@@ -76,18 +76,19 @@ else:
 
 # Get BSN Addons
 
-# from app.addons import get_bsn_addons
+from app.addons import get_addons
 
-def get_addons(sample_date):
-    append_infile = 'app/data/in/append_bsns.txt'
-    append_exists = pathlib.Path(append_infile).exists()
+# def get_addons(sample_date):
+#     append_infile = 'app/data/in/append_bsns.txt'
+#     append_exists = pathlib.Path(append_infile).exists()
+#
+#     if append_exists:
+#         with open(append_infile, "r") as f:
+#             addons = [pad_bsn(bsn) for bsn in f.read().splitlines()]
+#
+#     return addons
 
 
-
-    if append_exists:
-        with open(append_infile, "r") as f:
-            append_bsns = f.read().splitlines()
-            append_bsns = [pad_bsn(bsn) for bsn in append_bsns]
 
 ######################################################
 
@@ -125,20 +126,13 @@ else:
 # Read a txt file of isbns
 # File should be named append-bsns.txt
 # Make an argument?
-def process():
-    append_infile = 'app/data/in/append_bsns.txt'
+def process(addons=None):
 
-    append_exists = pathlib.Path(append_infile).exists()
-
-    if append_exists:
-        with open(append_infile, "r") as f:
-            append_bsns = f.read().splitlines()
-            append_bsns = [pad_bsn(bsn) for bsn in append_bsns]
-
-        #Transform list into XML file
+    if addons:
+        # Transform list into XML file
         root = ET.Element('printout')
 
-        for i, item in enumerate(append_bsns):
+        for i, item in enumerate(addons):
             temp = ET.Element('ROW')
             child = ET.Element('BSN')
             child.text = item
@@ -215,20 +209,17 @@ def process():
                for uchr in unistr
                if uchr.isalpha()) # isalpha suggested by John Machin
 
-
     def check_bsn(bsn):
         urlstring = 'http://aleph.library.nyu.edu/X?op=publish_avail&library=nyu01&doc_num=%s' % bsn
         url = urllib.request.urlopen(urlstring)
         tree = ET.parse(url)
         root = tree.getroot()
-        check = root.findall(".//{http://www.openarchives.org/OAI/2.0/}metadata/")
+        check = root.findall(".//{http://www.openarchives.org/OAI/2.0/}metadata")
         return True if check else False
 
     records = []
     processed = 0
     successes = 0
-
-
 
     for i, barcode in enumerate(barcodes):
         bc_index = barcodes.index(barcode)
@@ -287,7 +278,7 @@ def process():
         else:
             print(f'{bsn} is an invalid BSN. Skipping record...')
 
-    print('\nFinished processing %d records.' % processed)
+    print('\nFinished processing %d records with %d successes.' % (processed, successes))
 
 
     ## Choose category using call number map
@@ -359,8 +350,8 @@ def index():
     zotero_link = f'https://www.zotero.org/groups/290269/isaw_library_new_titles/items/collectionKey/{collection_key}'
 
     # Break process() up into smaller functions
-    get_addons(sample_date)
-    process()
+    addons = get_addons(sample_date)
+    process(addons=addons)
     return render_template("index.html",
                            title='Home',
                            range_low_format=range_low_format,

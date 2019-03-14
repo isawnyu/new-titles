@@ -3,9 +3,11 @@
 from __future__ import print_function
 import pickle
 import os.path
+from datetime import datetime
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -16,7 +18,7 @@ SPREADSHEET_ID = '12ewTErqG3h2ToDdn97WQmdW59_xiowfr2T3I3GaTsk8'
 RANGE_NAME = 'BSN_Columns'
 ############################
 
-def get_bsn_addons():
+def get_addons(sample_date):
     """Shows basic usage of the Sheets API.
     Prints values from a sample spreadsheet.
     """
@@ -33,7 +35,7 @@ def get_bsn_addons():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                '../credentials.json', SCOPES)
+                'credentials.json', SCOPES)
             creds = flow.run_local_server()
         # Save the credentials for the next run
         with open('../token.pickle', 'wb') as token:
@@ -46,16 +48,22 @@ def get_bsn_addons():
     result = sheet.values().get(spreadsheetId=SPREADSHEET_ID,
                                 range=RANGE_NAME).execute()
     values = result.get('values', [])
-    bsn_addon_data = []
+    bsn_addons = []
 
     if not values:
         print('No data found.')
     else:
         for row in values[1:]:
-            bsn_addon_data.append(row)
+            bsn_addons.append(row)
 
-    print(bsn_addon_data)
-    return bsn_addon_data
+    bsn_addons_current = []
+
+    for bsn_addon in bsn_addons:
+        bsn_date = datetime.strptime(bsn_addon[0], '%m/%d/%Y')
+        if  bsn_date.strftime('%Y') == sample_date.strftime('%Y') and bsn_date.strftime('%m') == sample_date.strftime('%m'):
+            bsn_addons_current.append(bsn_addon[1])
+
+    return bsn_addons_current
 
 if __name__ == '__main__':
     get_bsn_addons()
