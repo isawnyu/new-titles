@@ -18,16 +18,10 @@ import callnumber as callnumber
 import os
 from pyzotero import zotero
 
-from datetime import datetime
+from datetime import datetime, date
 from calendar import monthrange
 
 from pprint import pprint
-
-#library_id = os.getenv('LIBRARY_ID')
-#library_type = os.getenv('LIBRARY_TYPE')
-#api_key = os.getenv('API_KEY')
-
-#z = zotero.Zotero(library_id, library_type, api_key)
 
 from app.newtitles import combine_xml, pad_bsn, prettify_xml
 from app.title import NewTitle, NewTitleXML
@@ -37,16 +31,27 @@ from app.title import NewTitle, NewTitleXML
 with open('app/data/in/ISAW_NEW_650_all.xml') as f:
     doc = xmltodict.parse(f.read())
 
+######################################################
 ### Extract date info
+def get_sample_date(aleph_xml_dict):
+    sample_row = doc['printout']['ROW'][0]['DATE_ADDED']
+    sample_date = datetime.strptime(sample_row, '%Y%m%d')
+    return sample_date
 
-def get_month_year(aleph_xml_dict):
-    date_sample = doc['printout']['ROW'][0]['DATE_ADDED']
-    d = datetime.strptime(date_sample, '%Y%m%d')
+def get_date_info(sample_date):
+    d = sample_date
     year = d.strftime('%Y')
     month = d.strftime('%m')
-    return year, month
+    month_name = d.strftime('%B')
+    return year, month, month_name
 
-year, month = get_month_year(doc)
+sample_date = get_sample_date(doc)
+year, month, month_name = get_date_info(sample_date)
+print(year, month, month_name)
+if int(month) == 1:
+    last_month_name = "December"
+else:
+    last_month_name = date(1900, int(month)-1, 1).strftime('%B')
 _, max_day = monthrange(int(year), int(month))
 max_day = '{:02}'.format(max_day)
 
@@ -57,11 +62,70 @@ range_high = datetime.strptime(range_high_str, '%Y%m%d')
 range_low_format = range_low.strftime('%B %-d, %Y')
 range_high_format = range_high.strftime('%B %-d, %Y')
 
+zotero_match = f'{int(month):02d}: {month_name} {year}'
+
+if int(month) == 1:
+    zotero_match_last = f'12: December {int(year)-1}'
+else:
+    zotero_match_last = f'{int(month)-1:02d}: {last_month_name} {year}'
+
+######################################################
+
+######################################################
+
+# Get BSN Addons
+
+# from app.addons import get_bsn_addons
+
+def get_addons(sample_date):
+    append_infile = 'app/data/in/append_bsns.txt'
+    append_exists = pathlib.Path(append_infile).exists()
+
+
+
+    if append_exists:
+        with open(append_infile, "r") as f:
+            append_bsns = f.read().splitlines()
+            append_bsns = [pad_bsn(bsn) for bsn in append_bsns]
+
+######################################################
+
+
+######################################################
+### Check Zotero for new collection
+
+library_id = os.getenv('LIBRARY_ID')
+library_type = os.getenv('LIBRARY_TYPE')
+api_key = os.getenv('API_KEY')
+
+z = zotero.Zotero(library_id, library_type, api_key)
+
+collection_data = [(item['data']['name'],
+                    item['data']['key'],
+                    item['data']['parentCollection']) for item in z.collections()]
+
+collection_names, collection_keys, collection_parents = zip(*collection_data)
+
+if zotero_match not in collection_names:
+    print('No match!')
+
+    collection_parent = collection_parents[collection_names.index(zotero_match_last)]
+
+    print('Adding new collection...')
+
+    new_collection = z.create_collections([{'name': zotero_match, 'parentCollection': collection_parent}])
+    collection_key = new_collection['success']['0']
+else:
+    print('Already there!')
+    collection_key = collection_parents[collection_names.index(zotero_match)]
+######################################################
+
+######################################################
 # Read a txt file of isbns
 # File should be named append-bsns.txt
 # Make an argument?
 def process():
-    append_infile = 'app/data/in/append-bsns.txt'
+    append_infile = 'app/data/in/append_bsns.txt'
 
     append_exists = pathlib.Path(append_infile).exists()
 
@@ -131,6 +195,7 @@ def process():
 
     barcodes = [item['barcode'] for item in report]
     bsns = [item['bsn'] for item in report]
+    # pprint(list(zip(barcodes, bsns)))
 
     # Move to newtitles.py
     # http://stackoverflow.com/a/3308844
@@ -209,8 +274,6 @@ def process():
 
     ## Choose category using call number map
 
-
-
     with open('app/data/ref/lc_classes.csv', 'r') as f:
       reader = csv.reader(f)
       lc_classes = list(reader)
@@ -237,51 +300,10 @@ def process():
             else:
                 print(record['title'], record['lccn'])
 
-
     ## Guess category
 
-    from app.data.ref.train import train
-    import random
-    from sklearn.feature_extraction.text import CountVectorizer
-    from sklearn.feature_extraction.text import TfidfTransformer
-    from sklearn.naive_bayes import MultinomialNB
-
-    from nltk.corpus import stopwords
-    stops = stopwords.words('english') + stopwords.words('german') + stopwords.words('french')
-
-    def preprocess(text):
-        punctuation ="\"#$%&\'()*+,-/:;<=>@[\]^_`{|}~.?!"
-        translator = str.maketrans({key: " " for key in punctuation})
-        text = text.translate(translator)
-
-        symbols = "©"
-        translator = str.maketrans({key: " " for key in symbols})
-        text = text.translate(translator)
-
-        translator = str.maketrans({key: " " for key in '0123456789'})
-        text = text.translate(translator)
-
-        return text
-
-    data_ = [item for item in train]
-    data_ = random.sample(data_, len(data_))
-    train_data = [preprocess(item[1]) for item in data_][:2000]
-    train_target = [item[0] for item in data_][:2000]
-    test_data = [preprocess(item[1]) for item in data_][2000:]
-    test_target = [item[0] for item in data_][2000:]
-
-    categories = set([item[0] for item in train])
-
-    def predict_categories(titles):
-        count_vect = CountVectorizer(stop_words=stops, min_df=5)
-        X_train_counts = count_vect.fit_transform(train_data)
-        tfidf_transformer = TfidfTransformer()
-        X_train_tfidf = tfidf_transformer.fit_transform(X_train_counts)
-        clf = MultinomialNB().fit(X_train_tfidf, train_target)
-        X_new_counts = count_vect.transform(titles)
-        X_new_tfidf = tfidf_transformer.transform(X_new_counts)
-        predicted = clf.predict(X_new_tfidf)
-        return predicted
+    from app.categorize_nt import predict_categories
+    # ^^^ Can put any categorization algorithm into this module
 
     titles = [record['title'] for record in records]
 
@@ -296,15 +318,11 @@ def process():
     with open('app/data/ref/newtitles.p', 'wb') as f:
         pickle.dump(records, f)
 
-
-###
-#Export to Zotero
-###
-
-#zotero_create_collection = z.create_collection('name': current_new_titles')
-#zotero_link = f"https://www.zotero.org/groups/290269/isaw_library_new_titles/items/collectionKey/{zotero_create_collection['successful']['0']['links']['self']['href']}"
-
-###
+######################################################
+# *****
+# WRITE SCRIPT TO ADD NEW TITLES TO ZOTERO
+# *****
+######################################################
 
 import pickle
 
@@ -320,10 +338,10 @@ cats = ['Classical Antiquity & Western Europe',
 
 @app.route('/')
 def index():
-
-    zotero_link = "https://www.zotero.org/groups/290269/isaw_library_new_titles/items/collectionKey/XBKJZTFB"
+    zotero_link = f'https://www.zotero.org/groups/290269/isaw_library_new_titles/items/collectionKey/{collection_key}'
 
     # Break process() up into smaller functions
+    get_addons(sample_date)
     process()
     return render_template("index.html",
                            title='Home',

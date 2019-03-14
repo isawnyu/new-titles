@@ -104,3 +104,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 export_template.py
+
+# Custom: New Titles
+credentials.json
+token.pickle

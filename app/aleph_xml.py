@@ -95,9 +95,6 @@ for df in dfs_300:
 
 ## Remove subfield 9
 
-# for bad in tree.xpath("//fruit[@state='rotten']"):
-#     bad.getparent().remove(bad)
-
 sfs_9 = xml.findall(".//marc:subfield[@code='9']", nss)
 
 for sf in sfs_9:
