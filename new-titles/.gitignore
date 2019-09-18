@@ -108,6 +108,3 @@ export_template.py
 # Custom: New Titles
 credentials.json
 token.pickle
-
-# Apple files
-**/.DS_Store

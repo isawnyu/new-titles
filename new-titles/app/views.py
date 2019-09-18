@@ -29,19 +29,7 @@ from app.title import NewTitle, NewTitleXML
 
 ### Load/convert infile
 
-in_file = [file for file in os.listdir('app/data/in/') if file.endswith('.xml')]
-
-print(in_file)
-
-if 2 > len(in_file) > 1:
-    raise Exception(f'There are {len(in_file)} files in the in directory. There should only be one file. Check folder and rerun program.')
-
-in_file = in_file[0]
-
-if not in_file.startswith('ISAW_NEW'):
-    raise Exception(f'The filename in this directory should begin with ```ISAW_NEW```. Rename file and rerun program.')
-
-with open(f'app/data/in/{in_file}') as f:
+with open('app/data/in/ISAW_NEW_650_all.xml') as f:
     doc = xmltodict.parse(f.read())
 
 ######################################################
@@ -166,7 +154,7 @@ def process(addons=None):
     # Combine xml NT report with append
     # File should be named report.xml
     # Make an argument?
-    process_infile = f'app/data/in/{in_file}'
+    process_infile = 'app/data/in/ISAW_NEW_650_all.xml'
     process_tmp = 'app/data/tmp/report.xml'
     copyfile(process_infile, process_tmp)
 
