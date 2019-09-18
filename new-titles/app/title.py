@@ -1,12 +1,11 @@
 import urllib.request
 import xml.etree.ElementTree as ET
 from itertools import groupby
-import os
 
 class NewTitle(object):
     def __init__(self, bsn):
         self.bsn = bsn
-        urlstring = '%s%s' % (os.getenv('LIBRARY_API'), bsn)
+        urlstring = 'http://aleph.library.nyu.edu/X?op=publish_avail&library=nyu01&doc_num=%s' % self.bsn
         url = urllib.request.urlopen(urlstring)
         tree = ET.parse(url)
         self.root = tree.getroot()
@@ -283,7 +282,7 @@ class NewTitle(object):
 class NewTitleXML(object):
     def __init__(self, bsn):
         self.bsn = bsn
-        urlstring = '%s%s' % (os.getenv('LIBRARY_API'), self.bsn)
+        urlstring = 'http://aleph.library.nyu.edu/X?op=publish_avail&library=nyu01&doc_num=%s' % self.bsn
         url = urllib.request.urlopen(urlstring)
         tree = ET.parse(url)
         self.root = tree.getroot()

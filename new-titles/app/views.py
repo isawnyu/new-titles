@@ -29,19 +29,7 @@ from app.title import NewTitle, NewTitleXML
 
 ### Load/convert infile
 
-in_file = [file for file in os.listdir('app/data/in/') if file.endswith('.xml')]
-
-print(in_file)
-
-if 2 > len(in_file) > 1:
-    raise Exception(f'There are {len(in_file)} files in the in directory. There should only be one file. Check folder and rerun program.')
-
-in_file = in_file[0]
-
-if not in_file.startswith('ISAW_NEW'):
-    raise Exception(f'The filename in this directory should begin with ```ISAW_NEW```. Rename file and rerun program.')
-
-with open(f'app/data/in/{in_file}') as f:
+with open('app/data/in/ISAW_NEW_650_all.xml') as f:
     doc = xmltodict.parse(f.read())
 
 ######################################################
@@ -166,7 +154,7 @@ def process(addons=None):
     # Combine xml NT report with append
     # File should be named report.xml
     # Make an argument?
-    process_infile = f'app/data/in/{in_file}'
+    process_infile = 'app/data/in/ISAW_NEW_650_all.xml'
     process_tmp = 'app/data/tmp/report.xml'
     copyfile(process_infile, process_tmp)
 
@@ -222,7 +210,7 @@ def process(addons=None):
                if uchr.isalpha()) # isalpha suggested by John Machin
 
     def check_bsn(bsn):
-        urlstring = '%s%s' % (os.getenv('LIBRARY_API'), bsn)
+        urlstring = '%s%s' % (os.getenv('LIBRARY_API'), self.bsn)
         url = urllib.request.urlopen(urlstring)
         tree = ET.parse(url)
         root = tree.getroot()
@@ -351,7 +339,7 @@ nts = pickle.load(open("app/data/ref/newtitles.p", "rb" ))
 
 cats = ['Classical Antiquity & Western Europe',
         'Egypt & North Africa',
-        'The Near East & Asia Minor',
+        'The Ancient Near East & Asia Minor',
         'The Caucasus & The Western Steppe',
         'Central Asia & Siberia',
         'China, South Asia, & East Asia',
@@ -364,7 +352,7 @@ def index():
     # Break process() up into smaller functions
     addons = get_addons(sample_date)
     process(addons=addons)
-    strHTML = render_template("index.html",
+    return render_template("index.html",
                            title='Home',
                            range_low_format=range_low_format,
                            range_high_format=range_high_format,
@@ -372,10 +360,6 @@ def index():
                            nts=nts,
                            cats=cats #cats=set([nt['category'].title() for nt in nts])
                           )
-    with open('app/data/out/result.html', 'w') as f:
-        f.write(strHTML)
-        f.close()
-    return strHTML
 
 
 
@@ -385,7 +369,7 @@ def xml_test():
     #info = XML.root
     import requests
     from pprint import pprint
-    r = requests.get("%s002061459" % os.getenv('LIBRARY_API'))
+    r = requests.get("%s=002061459" % os.getenv('LIBRARY_API'))
     info = xmltodict.parse(r.content)['publish-avail']['OAI-PMH']['ListRecords']['record']['metadata']['record']
     pprint(dict(info))
     info = dict(info)

@@ -1,0 +1,21 @@
+<html>
+  <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <title>New Titles: {{ range_low_format }} - {{ range_high_format }}</title>
+  </head>
+  <body>
+      <h1>New Titles: {{ range_low_format }} - {{ range_high_format }}</h1>
+
+      <p>The following books were acquired and accessioned by the <a href="http://isaw.nyu.edu/library/">ISAW Library</a> between {{ range_low_format }} and {{ range_high_format }}. Items are grouped by geographic region, and sorted by Library of Congress classification. This information is also available in a <a href=" {{ zotero_link }} ">Zotero library</a>.</p>
+
+      <p>The ISAW Library compiles a single Zotero "library" for the entire year, with each
+         month representing a separate Zotero "collection." The metadata tags are only linked
+         or searchable at the "library" level, not at the "collection" level. For example,
+         if you review acquisitions for December 2015 and select the tag for "Hittite," nothing
+         may come up. However, if you move up the hierarchy from the collection "December 2015"
+         to the "library" for 2015 and then click on "Hittite," you will find items tagged
+         from previous months. Click here for information about Zotero. <a href="http://www.zotero.org">Click here for information about Zotero</a>.
+
+      {% block content %}{% endblock %}
+  </body>
+</html>
