@@ -58,10 +58,10 @@ def get_addons(sample_date):
 
     bsn_addons_current = []
 
-    # for bsn_addon in bsn_addons:
-    #     bsn_date = datetime.strptime(bsn_addon[0], '%m/%d/%Y')
-    #     if  bsn_date.strftime('%Y') == sample_date.strftime('%Y') and bsn_date.strftime('%m') == sample_date.strftime('%m'):
-    #         bsn_addons_current.append(bsn_addon[1])
+    for bsn_addon in bsn_addons:
+        bsn_date = datetime.strptime(bsn_addon[0], '%m/%d/%Y')
+        if  bsn_date.strftime('%Y') == sample_date.strftime('%Y') and bsn_date.strftime('%m') == sample_date.strftime('%m'):
+            bsn_addons_current.append(bsn_addon[1])
     # print(f'Returned the following addons:\n{bsn_addons_current}')
     return bsn_addons_current
 
