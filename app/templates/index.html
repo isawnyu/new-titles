@@ -1,8 +1,15 @@
 {% extends "base.html" %}
+<a name="top" id="top"></a>
 {% block content %}
     {% for cat in cats %}
     <div>
-        <h2>{{ cat }}</h2>
+        <h2><a class="anchor-link" href="#{{ cat.lower() }}" target="_self">{{ cat }}</a></h2>
+    </div>
+    {% endfor %}
+
+    {% for cat in cats %}
+    <div>
+        <h2><a id="{{ cat.lower() }}">{{ cat }}</a></h2>
 
         {% for nt in nts if nt.category == cat.lower() %}
         <div>
@@ -12,10 +19,11 @@
             {% if nt.series %}{{ nt.series }}. {% endif %}{% if nt.edition %}{{ nt.edition }}. {% endif %}{% if nt.imprint %}{{ nt.imprint }}. {% endif %}{{ nt.collection}} {{ nt.callnumber }}. {% if nt.gift %}{{ nt.gift }}.{% endif %}<br>
             <a href="{{ 'http://bobcat.library.nyu.edu/primo-explore/fulldisplay?docid=nyu_aleph%s&context=L&vid=NYU&&search_scope=all&tab=all&lang=en_US' % nt.bsn }}"" target="_blank">View item in Bobcat</a>. {% if nt.handle %}<a href="{{ nt.handle }}">View item in Ancient World Digital Library</a>. {% endif %}
         </p>
+        </div>
+        {% endfor %}
+    <a class="anchor-link" href="#top" target="_self"><em>Back to top</em></a>
     </div>
-    </div>
-{% endfor %}
-{% endfor %}
+    {% endfor %}
 {% endblock %}
 
 <!---

@@ -222,7 +222,7 @@ def process(addons=None):
                if uchr.isalpha()) # isalpha suggested by John Machin
 
     def check_bsn(bsn):
-        urlstring = 'http://aleph.library.nyu.edu/X?op=publish_avail&library=nyu01&doc_num=%s' % bsn
+        urlstring = '%s%s' % (os.getenv('LIBRARY_API'), bsn)
         url = urllib.request.urlopen(urlstring)
         tree = ET.parse(url)
         root = tree.getroot()
@@ -351,7 +351,7 @@ nts = pickle.load(open("app/data/ref/newtitles.p", "rb" ))
 
 cats = ['Classical Antiquity & Western Europe',
         'Egypt & North Africa',
-        'The Ancient Near East & Asia Minor',
+        'The Near East & Asia Minor',
         'The Caucasus & The Western Steppe',
         'Central Asia & Siberia',
         'China, South Asia, & East Asia',
@@ -364,7 +364,7 @@ def index():
     # Break process() up into smaller functions
     addons = get_addons(sample_date)
     process(addons=addons)
-    return render_template("index.html",
+    strHTML = render_template("index.html",
                            title='Home',
                            range_low_format=range_low_format,
                            range_high_format=range_high_format,
@@ -372,6 +372,10 @@ def index():
                            nts=nts,
                            cats=cats #cats=set([nt['category'].title() for nt in nts])
                           )
+    with open('app/data/out/result.html', 'w') as f:
+        f.write(strHTML)
+        f.close()
+    return strHTML
 
 
 
@@ -381,7 +385,7 @@ def xml_test():
     #info = XML.root
     import requests
     from pprint import pprint
-    r = requests.get("http://aleph.library.nyu.edu/X?op=publish_avail&library=nyu01&doc_num=002061459")
+    r = requests.get("%s002061459" % os.getenv('LIBRARY_API'))
     info = xmltodict.parse(r.content)['publish-avail']['OAI-PMH']['ListRecords']['record']['metadata']['record']
     pprint(dict(info))
     info = dict(info)

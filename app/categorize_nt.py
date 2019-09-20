@@ -4,6 +4,9 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 
+import nltk
+nltk.download('stopwords')
+
 from nltk.corpus import stopwords
 stops = stopwords.words('english') + stopwords.words('german') + stopwords.words('french')
 

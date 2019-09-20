@@ -210,7 +210,7 @@ def process(addons=None):
                if uchr.isalpha()) # isalpha suggested by John Machin
 
     def check_bsn(bsn):
-        urlstring = 'http://aleph.library.nyu.edu/X?op=publish_avail&library=nyu01&doc_num=%s' % bsn
+        urlstring = '%s%s' % (os.getenv('LIBRARY_API'), self.bsn)
         url = urllib.request.urlopen(urlstring)
         tree = ET.parse(url)
         root = tree.getroot()
@@ -369,7 +369,7 @@ def xml_test():
     #info = XML.root
     import requests
     from pprint import pprint
-    r = requests.get("http://aleph.library.nyu.edu/X?op=publish_avail&library=nyu01&doc_num=002061459")
+    r = requests.get("%s=002061459" % os.getenv('LIBRARY_API'))
     info = xmltodict.parse(r.content)['publish-avail']['OAI-PMH']['ListRecords']['record']['metadata']['record']
     pprint(dict(info))
     info = dict(info)

@@ -34,8 +34,8 @@ for row in doc['printout']['ROW']:
     bsns.append(row['BSN'])
 
 ### Create xml object
-
-urlbase = 'http://aleph.library.nyu.edu/X?op=publish_avail&library=nyu01&doc_num='
+import os
+urlbase = os.getenv('LIBRARY_API')
 nss = {'marc': 'http://www.loc.gov/MARC21/slim',}
 
 records = []
