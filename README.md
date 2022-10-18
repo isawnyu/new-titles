@@ -1,3 +1,4 @@
 Code for processing ISAW New Titles
-- (Make sure you have run ```pipenv shell```)
-- ```flask run```
+
+Written by PJB 2.7.2018; last updated PJB 12.28.2021.
+Project archived by PJB 10.18.2022
